@@ -2,20 +2,19 @@
 /**
  * Created by PhpStorm.
  * User: nts
- * Date: 1.4.18.
- * Time: 00.01
+ * Date: 19.4.18.
+ * Time: 01.32
  */
 
 namespace KgBot\Mintsoft\Builders;
 
 
-use KgBot\Mintsoft\Models\Product;
+use KgBot\Mintsoft\Models\Order;
 
-class ProductBuilder extends Builder
+class OrderBuilder extends Builder
 {
-
-    protected $entity = 'Product';
-    protected $model  = Product::class;
+    protected $entity = 'Order';
+    protected $model  = Order::class;
 
     /**
      * @inheritDoc

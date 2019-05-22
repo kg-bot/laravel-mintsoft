@@ -6,11 +6,16 @@
  * Time: 17.03
  */
 
-namespace KgBot\Billy\Utils;
+namespace KgBot\Mintsoft\Utils;
 
+
+use ReflectionObject;
+use ReflectionProperty;
 
 class Model
 {
+    use Filters;
+
     protected $entity;
     protected $primaryKey;
     protected $modelClass = self::class;
@@ -54,8 +59,8 @@ class Model
     public function toArray()
     {
         $data       = [];
-        $class      = new \ReflectionObject( $this );
-        $properties = $class->getProperties( \ReflectionProperty::IS_PUBLIC );
+        $class      = new ReflectionObject( $this );
+        $properties = $class->getProperties( ReflectionProperty::IS_PUBLIC );
 
         /** @var \ReflectionProperty $property */
         foreach ( $properties as $property ) {
@@ -68,6 +73,7 @@ class Model
 
     public function delete()
     {
+
         return $this->request->handleWithExceptions( function () {
 
             return $this->request->client->delete( "{$this->entity}/{$this->{$this->primaryKey}}" );
@@ -76,19 +82,20 @@ class Model
 
     public function update( $data = [] )
     {
-        $data = [
-            str_singular( $this->entity ) => $data,
-        ];
 
-        return $this->request->handleWithExceptions( function () use ( $data ) {
+        $urlFilters = $this->parseFilters();
 
-            $response = $this->request->client->put( "{$this->entity}/{$this->{$this->primaryKey}}", [
+        return $this->request->handleWithExceptions( function () use ( $data, $urlFilters ) {
+
+            $response = $this->request->client->post( "{$this->entity}/{$this->{$this->primaryKey}}{$urlFilters}", [
                 'json' => $data,
             ] );
 
             $responseData = json_decode( (string) $response->getBody() );
 
-            return new $this->modelClass( $this->request, $responseData->{$this->entity}[ 0 ] );
+            $responseData = ( is_array( $responseData ) ) ? $responseData[ 0 ] : $responseData;
+
+            return new $this->modelClass( $this->request, $responseData );
         } );
     }
 
@@ -100,5 +107,15 @@ class Model
     public function setEntity( $new_entity )
     {
         $this->entity = $new_entity;
+    }
+
+    public function getPrimaryKey()
+    {
+        return $this->primaryKey;
+    }
+
+    public function setPrimaryKey( $new_key )
+    {
+        $this->primaryKey = $new_key;
     }
 }

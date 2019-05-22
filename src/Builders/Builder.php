@@ -6,14 +6,17 @@
  * Time: 17.00
  */
 
-namespace KgBot\Billy\Builders;
+namespace KgBot\Mintsoft\Builders;
 
-use KgBot\Billy\Utils\Model;
-use KgBot\Billy\Utils\Request;
+use KgBot\Mintsoft\Utils\Filters;
+use KgBot\Mintsoft\Utils\Model;
+use KgBot\Mintsoft\Utils\Request;
 
 
 class Builder
 {
+    use Filters;
+
     protected $entity;
     /** @var Model */
     protected $model;
@@ -46,35 +49,9 @@ class Builder
         } );
     }
 
-    protected function parseFilters( $filters )
-    {
-        $urlFilters = '?limit=1500';
-
-        if ( count( $filters ) > 0 ) {
-
-            $urlFilters .= '&';
-            $i          = 1;
-
-            foreach ( $filters as $filter ) {
-
-                $urlFilters .= $filter[ 0 ] . $filter[ 1 ] .
-                               $this->escapeFilter( $filter[ 2 ] ); // todo fix arrays aswell ([1,2,3,...] string)
-
-                if ( count( $filters ) > $i ) {
-
-                    $urlFilters .= '&'; // todo allow $or: also
-                }
-
-                $i++;
-            }
-        }
-
-        return $urlFilters;
-    }
-
     protected function parseResponse( $response )
     {
-        $fetchedItems = collect( $response->{$this->entity} );
+        $fetchedItems = collect( $response );
         $items        = collect( [] );
 
         foreach ( $fetchedItems as $index => $item ) {
@@ -90,59 +67,39 @@ class Builder
         return $items;
     }
 
-    private function escapeFilter( $variable )
-    {
-        $escapedStrings    = [
-            "$",
-            '(',
-            ')',
-            '*',
-            '[',
-            ']',
-            ',',
-        ];
-        $urlencodedStrings = [
-            '+',
-            ' ',
-        ];
-        foreach ( $escapedStrings as $escapedString ) {
-
-            $variable = str_replace( $escapedString, '$' . $escapedString, $variable );
-        }
-        foreach ( $urlencodedStrings as $urlencodedString ) {
-
-            $variable = str_replace( $urlencodedString, urlencode( $urlencodedString ), $variable );
-        }
-
-        return $variable;
-    }
 
     public function find( $id )
     {
-        return $this->request->handleWithExceptions( function () use ( $id ) {
+        $urlFilters = $this->parseFilters();
 
-            $response     = $this->request->client->get( "{$this->entity}/{$id}" );
-            $responseData = collect( json_decode( (string) $response->getBody() ) );
 
-            return new $this->model( $this->request, $responseData->values()->{str_singular( $this->entity )} );
+        return $this->request->handleWithExceptions( function () use ( $id, $urlFilters ) {
+
+            $response     = $this->request->client->get( "{$this->entity}/{$id}{$urlFilters}" );
+            $responseData = json_decode( (string) $response->getBody() );
+
+
+            return new $this->model( $this->request, $responseData );
         } );
     }
 
     public function create( $data )
     {
-        $data = [
-            str_singular( $this->entity ) => $data,
-        ];
 
-        return $this->request->handleWithExceptions( function () use ( $data ) {
+        $urlFilters = $this->parseFilters();
 
-            $response = $this->request->client->post( "{$this->entity}", [
+        return $this->request->handleWithExceptions( function () use ( $data, $urlFilters ) {
+
+            $response = $this->request->client->put( "{$this->entity}{$urlFilters}", [
                 'json' => $data,
             ] );
 
             $responseData = json_decode( (string) $response->getBody() );
 
-            return new $this->model( $this->request, $responseData->{$this->entity}[ 0 ] );
+            $responseData = ( is_array( $responseData ) ) ? $responseData[ 0 ] : $responseData;
+
+
+            return new $this->model( $this->request, $responseData );
         } );
     }
 

@@ -6,14 +6,15 @@
  * Time: 16.53
  */
 
-namespace KgBot\Billy\Utils;
+namespace KgBot\Mintsoft\Utils;
 
 
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
-use KgBot\Billy\Exceptions\BillyClientException;
-use KgBot\Billy\Exceptions\BillyRequestException;
+use KgBot\Mintsoft\Exceptions\MintsoftClientException;
+use KgBot\Mintsoft\Exceptions\MintsoftRequestException;
 
 class Request
 {
@@ -21,6 +22,28 @@ class Request
      * @var \GuzzleHttp\Client
      */
     public $client;
+    /**
+     * API Key
+     *
+     * @var string $api_key
+     **/
+    private $api_key;
+    /**
+     * Username
+     *
+     * @var string $username
+     **/
+    private $username;
+    /**
+     * Password
+     *
+     * @var string $password
+     **/
+    private $password;
+    /**
+     * @var array $options
+     */
+    private $options = [];
 
     /**
      * Request constructor.
@@ -29,29 +52,55 @@ class Request
      * @param array $options
      * @param array $headers
      */
-    public function __construct( $token = null, $options = [], $headers = [] )
+    public function __construct( $username = null, $password = null, $options = [], $headers = [] )
     {
-        $token        = $token ?? config( 'billy.token' );
+        $this->username = $username ?? config( 'mintsoft.username' );
+        $this->password = $password ?? config( 'mintsoft.password' );
+
+        $this->get_auth();
+
         $headers      = array_merge( $headers, [
 
-            'Accept'         => 'application/json',
-            'Content-Type'   => 'application/json',
-            'X-Access-Token' => $token,
+            'Accept'       => 'application/json',
+            'Content-Type' => 'application/json',
         ] );
         $options      = array_merge( $options, [
 
-            'base_uri' => config( 'billy.base_uri' ),
+            'base_uri' => config( 'mintsoft.base_uri' ),
             'headers'  => $headers,
         ] );
         $this->client = new Client( $options );
+    }
+
+    private function get_auth()
+    {
+        $query = http_build_query( [
+
+            'UserName' => $this->username,
+            'Password' => $this->password,
+        ] );
+
+        $options = [
+            CURLOPT_RETURNTRANSFER => true,   // return web page
+            CURLOPT_HEADER         => false,  // don't return headers
+            CURLOPT_FOLLOWLOCATION => true,   // follow redirects
+            CURLOPT_MAXREDIRS      => 10,     // stop after 10 redirects
+        ];
+
+        $ch = curl_init( config( 'mintsoft.base_uri' ) . 'Auth?' . $query );
+        curl_setopt_array( $ch, $options );
+        $response = curl_exec( $ch );
+        curl_close( $ch );
+
+        $this->api_key = trim( $response, '""' );
     }
 
     /**
      * @param $callback
      *
      * @return mixed
-     * @throws \KgBot\Billy\Exceptions\BillyClientException
-     * @throws \KgBot\Billy\Exceptions\BillyRequestException
+     * @throws \KgBot\Mintsoft\Exceptions\MintsoftClientException
+     * @throws \KgBot\Mintsoft\Exceptions\MintsoftRequestException
      */
     public function handleWithExceptions( $callback )
     {
@@ -69,7 +118,7 @@ class Request
                 $code    = $exception->getResponse()->getStatusCode();
             }
 
-            throw new BillyRequestException( $message, $code );
+            throw new MintsoftRequestException( $message, $code );
 
         } catch ( ServerException $exception ) {
 
@@ -82,14 +131,20 @@ class Request
                 $code    = $exception->getResponse()->getStatusCode();
             }
 
-            throw new BillyRequestException( $message, $code );
+            throw new MintsoftRequestException( $message, $code );
 
-        } catch ( \Exception $exception ) {
+        } catch ( Exception $exception ) {
 
             $message = $exception->getMessage();
             $code    = $exception->getCode();
 
-            throw new BillyClientException( $message, $code );
+            throw new MintsoftClientException( $message, $code );
         }
+    }
+
+    public function getApiKey()
+    {
+
+        return $this->api_key;
     }
 }

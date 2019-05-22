@@ -2,8 +2,8 @@
 /**
  * Created by PhpStorm.
  * User: nts
- * Date: 1.4.18.
- * Time: 00.02
+ * Date: 19.4.18.
+ * Time: 01.30
  */
 
 namespace KgBot\Mintsoft\Models;
@@ -11,9 +11,8 @@ namespace KgBot\Mintsoft\Models;
 
 use KgBot\Mintsoft\Utils\Model;
 
-class Product extends Model
+class Warehouse extends Model
 {
-    protected $entity     = 'Product';
+    protected $entity     = 'Warehouse';
     protected $primaryKey = 'ID';
-
 }

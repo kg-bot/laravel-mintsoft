@@ -1,6 +1,6 @@
 {
-  "name": "kg-bot/laravel-billy",
-  "description": "Laravel Integration With Billy Billing API",
+  "name": "kg-bot/laravel-mintsoft",
+  "description": "Laravel Integration With Mintsoft API",
   "license": "MIT",
   "type": "library",
   "authors": [
@@ -12,17 +12,19 @@
   "require": {
     "php": ">=7.1",
     "laravel/framework": "^5.5",
-    "guzzlehttp/guzzle": "*"
+    "guzzlehttp/guzzle": "*",
+    "ext-curl": "*",
+    "ext-json": "*"
   },
   "autoload": {
     "psr-4": {
-      "KgBot\\Billy\\": "src/"
+      "KgBot\\Mintsoft\\": "src/"
     }
   },
   "extra": {
     "laravel": {
       "providers": [
-        "KgBot\\Billy\\BillyServiceProvider"
+        "KgBot\\Mintsoft\\MintsoftServiceProvider"
       ]
     }
   }

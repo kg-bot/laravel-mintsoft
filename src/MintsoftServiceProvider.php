@@ -6,31 +6,31 @@
  * Time: 01.02
  */
 
-namespace KgBot\Billy;
+namespace KgBot\Mintsoft;
 
 
 use Illuminate\Support\ServiceProvider;
 
-class BillyServiceProvider extends ServiceProvider
+class MintsoftServiceProvider extends ServiceProvider
 {
     /**
      * Boot.
      */
     public function boot()
     {
-        $configPath = __DIR__ . '/config/billy.php';
+        $configPath = __DIR__ . '/config/mintsoft.php';
 
-        $this->mergeConfigFrom( $configPath, 'billy' );
+        $this->mergeConfigFrom( $configPath, 'mintsoft' );
 
-        $configPath = __DIR__ . '/config/billy.php';
+        $configPath = __DIR__ . '/config/mintsoft.php';
 
         if ( function_exists( 'config_path' ) ) {
 
-            $publishPath = config_path( 'billy.php' );
+            $publishPath = config_path( 'mintsoft.php' );
 
         } else {
 
-            $publishPath = base_path( 'config/billy.php' );
+            $publishPath = base_path( 'config/mintsoft.php' );
 
         }
 
