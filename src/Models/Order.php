@@ -24,14 +24,25 @@ class Order extends Model
         return $this->request->handleWithExceptions( function () use ( $data, $urlFilters ) {
 
             $response =
-                $this->request->client->put( "{$this->entity}/{$this->{$this->primaryKey}}/ConnectActions{$urlFilters}",
+                $this->request->client->put("{$this->entity}/{$this->{$this->primaryKey}}/ConnectActions{$urlFilters}",
                     [
                         'json' => $data,
-                    ] );
+                    ]);
 
-            $responseData = json_decode( (string) $response->getBody() );
+            return json_decode((string)$response->getBody());
+        });
+    }
 
-            return $responseData;
-        } );
+
+    public function connectActions()
+    {
+
+        return $this->request->handleWithExceptions(function () {
+
+            $response =
+                $this->request->client->get("{$this->entity}/{$this->{$this->primaryKey}}/ConnectActions");
+
+            return json_decode((string)$response->getBody());
+        });
     }
 }
